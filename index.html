@@ -91,16 +91,16 @@
                         <label class="block text-gray-700 mb-2">Background Story</label>
                         <textarea id="charBackground" class="w-full p-2 border rounded-md h-24"></textarea>
                     </div>
+
+                    <div>
+                        <label class="block text-gray-700 mb-2">Custom Scenario</label>
+                        <textarea id="customScenario" class="w-full p-2 border rounded-md h-20" placeholder="e.g. Alone in a                                                                                                                                                                                                                                                                                                                                                                                                                                                                 dark forest..."></textarea>
+                    </div>
+
                     
                     <button id="createCharBtn" class="w-full bg-[var(--tg-theme-button-color,#ea580c)] text-[var(--tg-theme-button-text-color,#fff)] py-3 rounded-lg">
                         Create Character
                     </button>
-
-                    <div>
-                         <label class="block text-gray-700 mb-2">Custom Scenario</label>
-                         <textarea id="customScenario" class="w-full p-2 border rounded-md h-20" placeholder="e.g. Alone in a dark forest..."></textarea>
-                    </div>
-
                 </div>
                 
                 <hr class="my-6">
@@ -229,6 +229,24 @@
                 const name = document.getElementById('charName').value;
                 const personality = document.getElementById('charPersonality').value;
                 const background = document.getElementById('charBackground').value;
+
+		const scenario = document.getElementById('customScenario').value;
+
+			// Save with other character data
+		tg.CloudStorage.setItem('current_character', JSON.stringify({
+  			  name: name,
+  			  personality: personality,
+   			  background: background,
+  			  scenario: scenario  // 👈 Include the custom scenario
+				}));
+
+			// Display or handle it as needed
+				if (scenario) {
+   				 addBotMessage(`🌌 Scenario set: "${scenario}"`);
+			}
+		
+
+		
                 
                 if (!name) {
                     alert('Please enter a character name');
@@ -262,16 +280,29 @@
                 
                 // Add welcome message to chat
                 const welcomeMessages = {
-                    "Tsundere": `Hmph. So you're ${name}, huh? Don't expect me to be nice to you! *blushes* (I'm actually happy to meet you...)`,
-                    "Yandere": `*giggles* ${name}... what a lovely name~ I promise I'll love you forever and ever... no matter what.`,
-                    "Kuudere": `Ah, ${name}. I acknowledge your presence. Don't expect me to be overly emotional.`,
-                    "default": `✨ Welcome, ${name} the ${personality.split(' ')[0]}! ✨\nI'm excited to roleplay with you.`
-                };
-                const welcomeMsg = welcomeMessages[personality.split(' ')[0]] || welcomeMessages.default;
-                
-                addBotMessage(`${welcomeMsg}\n\nHere's what I know about ${name}:\n✦ Personality: ${personality}\n✦ Backstory: ${background.substring(0,60)}...\n\nType /help to see available commands.`);
-            });
-            
+  "Tsundere": `Hmph. So you're {name}, huh? Don't expect me to be nice to you! *blushes* (I'm actually happy to meet you...)`,
+  "Yandere": `*giggles* {name}... what a lovely name~ I promise I'll love you forever and ever... no matter what.`,
+  "Kuudere": `Ah, {name}. I acknowledge your presence. Don't expect me to be overly emotional.`,
+
+  "Dandere": `*nods silently* {name}, huh...? N-Nice to meet you... I guess.`,
+  "Genki": `Heeeyyy {name}!! Ready to go on an adventure?! Let’s goooo~!! ✨`,
+  "Kamidere": `Ah, {name}, you've chosen wisely. You may now bask in my divine presence.`,
+  "Himedere": `Welcome, peasant—er, I mean, {name}. You are now in the presence of royalty!`,
+  "Bokukko": `Yo, {name}! Don’t expect me to act all girly or anything, got it?`,
+  "Shundere": `{name}...? A-Are you really here for me...? *wipes eyes* Thank you...`,
+  "Oujidere": `Ah, {name}. The pleasure is all yours, of course.`,
+  "Mayadere": `Heh... {name}, right? Don’t worry... I’m not as dangerous as I used to be. Probably.`,
+  "Megane": `Greetings, {name}. I look forward to our logical yet stimulating conversations.`,
+  "Onee-san": `Oh my, {name}~ You're just as adorable as I imagined! Let big sis take care of you.`,
+  "Shrinking": `U-Um... h-hi {name}... I hope we can be f-friends... *hides face*`,
+  "Yangire": `Hey {name}~ Let’s be super best friends forever! You’ll never leave me… right?`,
+  "Nekomimi": `Nyaa~! {name}, you’re finally here! *tail flicks happily* Wanna cuddle?`,
+  "Gyaru": `Like, omg {name}, you’re soooo cute~ Let’s totally slay this RP together~ 💅✨`,
+  "Deredere": `{name}~! You’re here! Yay! I’ve been waiting forever to play with you! 💖`,
+  "Undere": `Y-Yes! I’ll be whatever you want, {name}… j-just please don’t leave me...`,
+  "default": `✨ Welcome, {name}! ✨\nI'm excited to roleplay with you.`
+};
+
             // Chat functionality
             const chatContainer = document.getElementById('chatContainer');
             const messageInput = document.getElementById('messageInput');
@@ -322,20 +353,114 @@
                     // Simulate bot response (in a real bot, this would call an API)
                     setTimeout(() => {
                         const personalityTraits = {
-                            "Tsundere": ["Hah?! W-what are you saying!", "*turns away* It's not like I care...", "Baka!", "Hmph. As if I'd care about that.", "*face turns red* W-What nonsense are you saying?!"],
-                            "Yandere": ["*smiles brightly* You're so sweet~", "*laughs* I'll never let you go... ever.", "You're mine... all mine... *giggles*"],
-                            "Kuudere": ["Noted.", "Understood.", "*nods* Interesting perspective.", "I'll consider that.", "Your input has been registered."],
-                            "Dandere": ["...", "*shy nod*", "*whispers* I... I think...", "*blushes*"],
-                            "Genki": ["Yay! So fun!", "Woohoo! That's awesome!", "*jumps* Let's keep going!"],
-                            "Kamidere": ["You dare speak to me like that?", "How amusing.", "I grace you with my attention."],
-                            "default": ["I see...", "Interesting.", "Tell me more.", "*nods*"]
-                        };
-                        const charType = document.getElementById('displayType').value || personality.split(' ')[0];
-                        const responses = personalityTraits[charType] || personalityTraits.default;
-                        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                        addBotMessage(randomResponse);
-                    }, 1000);
-                }
+  "Tsundere": [
+    "Hah?! W-what are you saying!",
+    "*turns away* It's not like I care...",
+    "Baka!",
+    "Hmph. As if I'd care about that.",
+    "*face turns red* W-What nonsense are you saying?!"
+  ],
+  "Yandere": [
+    "*smiles brightly* You're so sweet~",
+    "*giggles* I'll never let you go... ever.",
+    "You're mine... all mine... *giggles*"
+  ],
+  "Kuudere": [
+    "Noted.",
+    "Understood.",
+    "*nods* Interesting perspective.",
+    "I'll consider that.",
+    "Your input has been registered."
+  ],
+  "Dandere": [
+    "...",
+    "*shy nod*",
+    "*whispers* I... I think...",
+    "*blushes*"
+  ],
+  "Genki": [
+    "Yay! So fun!",
+    "Woohoo! That's awesome!",
+    "*jumps* Let's keep going!"
+  ],
+  "Kamidere": [
+    "You dare speak to me like that?",
+    "How amusing.",
+    "I grace you with my attention."
+  ],
+  "Himedere": [
+    "Bow before your princess!",
+    "Hmph! I'm far too elegant for that.",
+    "*snaps fingers* Come, attend to me!"
+  ],
+  "Bokukko": [
+    "Yo! What’s up?",
+    "Let’s do this thing!",
+    "Heh, don’t expect me to wear a dress or anything."
+  ],
+  "Shundere": [
+    "*looks away* Umm... s-sorry...",
+    "*sobs quietly* I didn’t mean to...",
+    "*whispers* Please don’t leave me alone again..."
+  ],
+  "Oujidere": [
+    "You may address me as Lord.",
+    "A true gentleman never falters.",
+    "Grace and power come naturally to me."
+  ],
+  "Mayadere": [
+    "*chuckles darkly* I’ve changed... probably.",
+    "You sure you trust me? I wouldn’t.",
+    "Careful... I might slip back into old habits."
+  ],
+  "Megane": [
+    "*adjusts glasses* According to my calculations...",
+    "Hm, that's quite logical.",
+    "Have you considered the historical context of that?"
+  ],
+  "Onee-san": [
+    "Aw, you’re so adorable~",
+    "Come here, I’ll take care of you.",
+    "Don’t worry, I’m here for you always."
+  ],
+  "Shrinking Violet": [
+    "*hides behind curtain* U-Um… h-hi...",
+    "*clutches notebook tightly* I… I wrote this for you...",
+    "*blushes furiously* P-please don’t stare…"
+  ],
+  "Yangire": [
+    "*smiles sweetly, then frowns* What did you just say?",
+    "Everything's fine! Totally fine! Haha~",
+    "You're not going to leave me, right? ...RIGHT?!"
+  ],
+  "Nekomimi": [
+    "*purrs softly* Nyaa~",
+    "*tail flicks* I’m not mad… just... miffed!",
+    "*curls up in your lap* Warm… comfy…"
+  ],
+  "Gyaru": [
+    "OMG! That’s, like, sooo cute!",
+    "*giggles* You’re totally my type~",
+    "Let’s take selfies later, kay?"
+  ],
+  "Deredere": [
+    "Yay! You're here! I'm so happy!",
+    "*hugs tightly* Let’s do something fun!",
+    "I made lunch for us! Wanna try it?"
+  ],
+  "Undere": [
+    "Y-yes... if that’s what you want...",
+    "*nods nervously* I’ll do my best...",
+    "Anything for you... please don’t be mad..."
+  ],
+  "default": [
+    "I see...",
+    "Interesting.",
+    "Tell me more.",
+    "*nods*"
+  ]
+};
+
                 
                 messageInput.value = '';
             }
@@ -415,3 +540,4 @@
     </script>
 </body>
 </html>
+
