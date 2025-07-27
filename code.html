@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WaifuRP Bot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .chat-message {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .character-card {
+            transition: all 0.3s ease;
+        }
+        .character-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .typewriter {
+            overflow: hidden;
+            border-right: 2px solid #333;
+            white-space: nowrap;
+            margin: 0 auto;
+            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #333; }
+        }
+    </style>
+</head>
+<body class="font-sans" style="background-color: var(--tg-theme-bg-color, #f3f4f6); color: var(--tg-theme-text-color, #000);">
+    <div class="container mx-auto p-2" style="max-width: 100%;">
+        <!-- Header Section -->
+        <header class="bg-gradient-to-r from-pink-500 to-purple-600 text-white p-4 shadow-lg" style="border-radius: 0;">
+            <div class="flex items-center">
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/a22757c8-58ec-4647-bbcc-e9a67b47518c.png" alt="WaifuRP Bot profile picture - anime-style character with pink hair and maid outfit" class="w-16 h-16 rounded-full mr-4 border-4 border-white">
+                <div>
+                    <h1 class="text-3xl font-bold">WaifuRP Bot</h1>
+                    <p class="text-pink-200">Your interactive roleplaying companion</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Character Creation Panel -->
+            <div class="md:col-span-1 bg-white rounded-xl p-6 shadow-md">
+                <h2 class="text-2xl font-bold mb-4 text-purple-800">Character Creator</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2">Character Name</label>
+                        <input type="text" id="charName" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-pink-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 mb-2">Personality</label>
+                        <select id="charPersonality" class="w-full p-2 border rounded-md">
+                            <option value="Tsundere">Tsundere - Starts cold, warms up over time</option>
+                            <option value="Yandere">Yandere - Lovestruck and possessive</option>
+                            <option value="Kuudere">Kuudere - Cold exterior, warm heart</option>
+                            <option value="Dandere">Dandere - Silent but deeply caring</option>
+                            <option value="Genki">Genki - Energetic and cheerful</option>
+                            <option value="Kamidere">Kamidere - Confident and god-complex</option>
+                            <option value="Himedere">Himedere - Princess-like attitude</option>
+                            <option value="Bokukko">Bokukko - Tomboy with rough speech</option>
+                            <option value="Shundere">Shundere - Bashful but affectionate</option>
+                            <option value="Oujidere">Oujidere - Noble prince type</option>
+                            <option value="Mayadere">Mayadere - Reformed villain</option>
+                            <option value="Megane">Megane - Intellectual glasses-wearer</option>
+                            <option value="Onee-san">Onee-san - Mature older sister</option>
+                            <option value="Shrinking Violet">Shrinking Violet - Extremely shy</option>
+                            <option value="Yangire">Yangire - Unpredictable mood swings</option>
+                            <option value="Nekomimi">Nekomimi - Catgirl tendencies</option>
+                            <option value="Gyaru">Gyaru - Fashionable and bold</option>
+                            <option value="Deredere">Deredere - Sweet and affectionate</option>
+                            <option value="Undere">Undere - Submissive and shy</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 mb-2">Background Story</label>
+                        <textarea id="charBackground" class="w-full p-2 border rounded-md h-24"></textarea>
+                    </div>
+                    
+                    <button id="createCharBtn" class="w-full bg-[var(--tg-theme-button-color,#ea580c)] text-[var(--tg-theme-button-text-color,#fff)] py-3 rounded-lg">
+                        Create Character
+                    </button>
+                </div>
+                
+                <hr class="my-6">
+                
+                <div id="characterDisplay" class="hidden">
+                    <h3 class="font-bold text-lg mb-3 text-center text-purple-800">Your Character</h3>
+                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-purple-300 shadow-sm">
+                        <div class="flex items-center mb-3">
+                            <div class="w-16 h-16 rounded-full bg-purple-200 flex items-center justify-center mr-3">
+                                <span class="text-2xl">👤</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-purple-700">Name</p>
+                                <p id="displayName" class="text-xl font-bold text-purple-900"></p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <p class="text-sm font-medium text-purple-700">Personality</p>
+                                <p id="displayType" class="px-3 py-1 bg-purple-100 rounded-full text-sm font-medium"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-purple-700">Affection</p>
+                                <div class="h-2 bg-purple-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-pink-500" style="width: 50%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <p class="text-sm font-medium text-purple-700 mb-1">Background</p>
+                            <p id="displayBg" class="text-sm text-gray-700 bg-white p-2 rounded"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Interface -->
+            <div class="md:col-span-2 bg-white rounded-xl shadow-md flex flex-col">
+                <div class="p-4 border-b bg-gray-50 rounded-t-xl">
+                    <h2 class="text-2xl font-bold text-purple-800">Roleplay Session</h2>
+                    <p class="text-gray-600">Currently chatting as <span id="currentChar" class="font-semibold">[No character selected]</span></p>
+                </div>
+                
+                <!-- Chat Messages -->
+                <div id="chatContainer" class="flex-1 p-4 overflow-y-auto max-h-96 space-y-4">
+                    <div class="text-center text-gray-500 py-8">
+                        <p class="typewriter">Welcome to WaifuRP Bot! Create a character to begin your adventure.</p>
+                    </div>
+                </div>
+                
+                <!-- Input Area -->
+                <div class="p-4 border-t bg-gray-50 rounded-b-xl">
+                    <div class="flex">
+                        <input type="text" id="messageInput" placeholder="Type your message..." class="flex-1 p-2 border rounded-l-md focus:ring-2 focus:ring-pink-500">
+                        <button id="sendMessageBtn" class="bg-pink-600 text-white px-4 py-2 rounded-r-md hover:bg-pink-700 transition">
+                            Send
+                        </button>
+                    </div>
+                    <div class="mt-2 text-sm text-gray-600">
+                        <p>Try commands: <span class="font-mono">/start_scene cafe</span>, <span class="font-mono">/action hug</span>, <span class="font-mono">/help</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scenario Gallery -->
+        <div class="mt-8 bg-white rounded-xl p-6 shadow-md">
+            <h2 class="text-2xl font-bold mb-4 text-purple-800">Scenario Templates</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Scenario Cards -->
+                <div class="character-card bg-gradient-to-br from-pink-50 to-purple-50 rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:border-pink-300">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/8a5a5606-b49e-4da2-b256-a547a19d50bb.png" alt="Romantic cafe scene with cherry blossoms in the background, anime style" class="w-full h-40 object-cover">
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-1">Cafe Encounter</h3>
+                        <p class="text-sm text-gray-600 mb-2">Meet your character in a cozy cafe with cherry blossoms outside.</p>
+                        <button class="text-sm bg-pink-600 text-white px-3 py-1 rounded hover:bg-pink-700 transition">
+                            Start Scene
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="character-card bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:border-blue-300">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/9e9cf377-6ff5-4718-9270-3268d193cda3.png" alt="Fantasy medieval castle courtyard during sunset, anime style" class="w-full h-40 object-cover">
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-1">Royal Meeting</h3>
+                        <p class="text-sm text-gray-600 mb-2">A formal introduction to the royal family in their grand castle.</p>
+                        <button class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">
+                            Start Scene
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="character-card bg-gradient-to-br from-green-50 to-teal-50 rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:border-green-300">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/70b4f37a-786b-4d42-92cf-9bf3252f2eda.png" alt="High school classroom with sunshine streaming through windows, anime style" class="w-full h-40 object-cover">
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-1">School Life</h3>
+                        <p class="text-sm text-gray-600 mb-2">Experience daily life with your character in a Japanese high school.</p>
+                        <button class="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">
+                            Start Scene
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        const tg = window.Telegram.WebApp;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Telegram Mini App
+            tg.expand();
+            tg.BackButton.hide();
+            
+            // Set theme colors
+            document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#f3f4f6');
+            document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000');
+            document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#ea580c');
+            document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#fff');
+            // Character creation
+            const createCharBtn = document.getElementById('createCharBtn');
+            const characterDisplay = document.getElementById('characterDisplay');
+            const currentCharSpan = document.getElementById('currentChar');
+            
+            createCharBtn.addEventListener('click', function() {
+                const name = document.getElementById('charName').value;
+                const personality = document.getElementById('charPersonality').value;
+                const background = document.getElementById('charBackground').value;
+                
+                if (!name) {
+                    alert('Please enter a character name');
+                    return;
+                }
+                
+                // Save character using Telegram WebApp storage
+                tg.CloudStorage.setItem('current_character', JSON.stringify({
+                    name: name,
+                    personality: personality,
+                    background: background
+                }));
+                
+                // Also save to bot's backend via sendData
+                tg.sendData(JSON.stringify({
+                    action: 'create_character',
+                    character: {
+                        name: name,
+                        type: personality,
+                        background: background
+                    }
+                }));
+                
+                // Display created character
+                document.getElementById('displayName').textContent = name;
+                document.getElementById('displayType').textContent = personality;
+                document.getElementById('displayBg').textContent = background;
+                
+                characterDisplay.classList.remove('hidden');
+                currentCharSpan.textContent = name;
+                
+                // Add welcome message to chat
+                const welcomeMessages = {
+                    "Tsundere": `Hmph. So you're ${name}, huh? Don't expect me to be nice to you! *blushes* (I'm actually happy to meet you...)`,
+                    "Yandere": `*giggles* ${name}... what a lovely name~ I promise I'll love you forever and ever... no matter what.`,
+                    "Kuudere": `Ah, ${name}. I acknowledge your presence. Don't expect me to be overly emotional.`,
+                    "default": `✨ Welcome, ${name} the ${personality.split(' ')[0]}! ✨\nI'm excited to roleplay with you.`
+                };
+                const welcomeMsg = welcomeMessages[personality.split(' ')[0]] || welcomeMessages.default;
+                
+                addBotMessage(`${welcomeMsg}\n\nHere's what I know about ${name}:\n✦ Personality: ${personality}\n✦ Backstory: ${background.substring(0,60)}...\n\nType /help to see available commands.`);
+            });
+            
+            // Chat functionality
+            const chatContainer = document.getElementById('chatContainer');
+            const messageInput = document.getElementById('messageInput');
+            const sendMessageBtn = document.getElementById('sendMessageBtn');
+            
+            function addMessage(sender, message, isUser = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-message flex ${isUser ? 'justify-end' : 'justify-start'}`;
+                
+                const bubble = document.createElement('div');
+                bubble.className = `max-w-xs md:max-w-md rounded-lg p-3 ${isUser ? 'bg-pink-600 text-white rounded-tr-none' : 'bg-gray-200 rounded-tl-none'}`;
+                
+                if (!isUser && sender) {
+                    const senderSpan = document.createElement('span');
+                    senderSpan.className = 'font-bold text-purple-800 text-sm';
+                    senderSpan.textContent = sender + ': ';
+                    bubble.prepend(senderSpan);
+                }
+                
+                bubble.append(document.createTextNode(message));
+                messageDiv.appendChild(bubble);
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            
+            function addBotMessage(message) {
+                addMessage('WaifuRP Bot', message, false);
+            }
+            
+            sendMessageBtn.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (!message) return;
+                
+                // Add user message to chat
+                addMessage(null, message, true);
+                
+                // Process commands
+                if (message.startsWith('/')) {
+                    processCommand(message);
+                } else {
+                    // Simulate bot response (in a real bot, this would call an API)
+                    setTimeout(() => {
+                        const personalityTraits = {
+                            "Tsundere": ["Hah?! W-what are you saying!", "*turns away* It's not like I care...", "Baka!", "Hmph. As if I'd care about that.", "*face turns red* W-What nonsense are you saying?!"],
+                            "Yandere": ["*smiles brightly* You're so sweet~", "*laughs* I'll never let you go... ever.", "You're mine... all mine... *giggles*"],
+                            "Kuudere": ["Noted.", "Understood.", "*nods* Interesting perspective.", "I'll consider that.", "Your input has been registered."],
+                            "Dandere": ["...", "*shy nod*", "*whispers* I... I think...", "*blushes*"],
+                            "Genki": ["Yay! So fun!", "Woohoo! That's awesome!", "*jumps* Let's keep going!"],
+                            "Kamidere": ["You dare speak to me like that?", "How amusing.", "I grace you with my attention."],
+                            "default": ["I see...", "Interesting.", "Tell me more.", "*nods*"]
+                        };
+                        const charType = document.getElementById('displayType').value || personality.split(' ')[0];
+                        const responses = personalityTraits[charType] || personalityTraits.default;
+                        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                        addBotMessage(randomResponse);
+                    }, 1000);
+                }
+                
+                messageInput.value = '';
+            }
+            
+            function processCommand(command) {
+                const parts = command.split(' ');
+                const cmd = parts[0].toLowerCase();
+                const args = parts.slice(1).join(' ');
+                
+                switch(cmd) {
+                    case '/help':
+                        addBotMessage("Available commands:\n" +
+                            "/start_scene [name] - Start a roleplay scenario\n" +
+                            "/action [action] - Perform an action with your character\n" +
+                            "/stats - Show your character's current stats\n" +
+                            "/end - End the current scene");
+                        break;
+                        
+                    case '/start_scene':
+                        if (!args) {
+                            addBotMessage("Please specify a scene name. Try /help for examples.");
+                        } else {
+                            addBotMessage(`Starting scene: ${args}\n*The scene begins...*`);
+                            if (args.toLowerCase() === 'cafe') {
+                                addBotMessage("You find yourself in a cozy cafe with soft jazz music playing. Your character sits across from you, sipping a cup of tea.");
+                            } else if (args.toLowerCase() === 'school') {
+                                addBotMessage("The school bell rings as you enter the classroom. Your character looks up from their desk and notices you.");
+                            }
+                        }
+                        break;
+                        
+                    case '/action':
+                        if (!args) {
+                            addBotMessage("Please specify an action. Try /help for examples.");
+                        } else {
+                            const currentChar = document.getElementById('displayName').textContent || 'Your character';
+                            addBotMessage(`*${currentChar} ${args}*`);
+                            
+                            // Random reaction
+                            setTimeout(() => {
+                                const reactions = [
+                                    "Oh! That was unexpected...",
+                                    "*blushes* Why would you do that?",
+                                    "I... I don't know how to respond to that!",
+                                    "That's so sweet of you! *smiles*",
+                                    "Hah? What's gotten into you?"
+                                ];
+                                addBotMessage(reactions[Math.floor(Math.random() * reactions.length)]);
+                            }, 800);
+                        }
+                        break;
+                        
+                    case '/stats':
+                        const charName = document.getElementById('displayName').textContent || '[No character]';
+                        const charType = document.getElementById('displayType').textContent || '[No type]';
+                        addBotMessage(`Character Stats:\nName: ${charName}\nType: ${charType}\nAffection: 50/100`);
+                        break;
+                        
+                    case '/end':
+                        addBotMessage("Ending the current scene. Type /start_scene [name] to begin a new one.");
+                        break;
+                        
+                    default:
+                        addBotMessage("Unknown command. Type /help to see available commands.");
+                }
+            }
+            
+            // Scenario buttons
+            document.querySelectorAll('.character-card button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const scenarioName = this.closest('.character-card').querySelector('h3').textContent;
+                    messageInput.value = `/start_scene ${scenarioName.split(' ')[0].toLowerCase()}`;
+                    sendMessage();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
