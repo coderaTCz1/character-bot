@@ -488,9 +488,7 @@
                 
                 messageInput.value = '';
             }
-            
-            
-            function processCommand(command) {
+              function processCommand(command) {
                 const parts = command.split(' ');
                 const cmd = parts[0].toLowerCase();
                 const args = parts.slice(1).join(' ');
@@ -552,10 +550,6 @@
                         addBotMessage("Unknown command. Type /help to see available commands.");
                 }
             }
-
-
-
-
             
             // Scenario buttons
             document.querySelectorAll('.character-card button').forEach(button => {
