@@ -489,7 +489,7 @@
                 messageInput.value = '';
             }
             
-           function processCommand(command) {
+          function processCommand(command) {
     const parts = command.split(' ');
     const cmd = parts[0].toLowerCase();
     const args = parts.slice(1).join(' ');
@@ -522,7 +522,6 @@
             } else {
                 const currentChar = document.getElementById('displayName').textContent || 'Your character';
                 addBotMessage(`*${currentChar} ${args}*`);
-
                 setTimeout(() => {
                     const reactions = [
                         "Oh! That was unexpected...",
@@ -550,6 +549,7 @@
             addBotMessage("Unknown command. Type /help to see available commands.");
     }
 }
+
 
             
             // Scenario buttons
