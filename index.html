@@ -489,66 +489,69 @@
                 messageInput.value = '';
             }
             
-          function processCommand(command) {
-    const parts = command.split(' ');
-    const cmd = parts[0].toLowerCase();
-    const args = parts.slice(1).join(' ');
-
-    switch (cmd) {
-        case '/help':
-            addBotMessage("Available commands:\n" +
-                "/start_scene [name] - Start a roleplay scenario\n" +
-                "/action [action] - Perform an action with your character\n" +
-                "/stats - Show your character's current stats\n" +
-                "/end - End the current scene");
-            break;
-
-        case '/start_scene':
-            if (!args) {
-                addBotMessage("Please specify a scene name. Try /help for examples.");
-            } else {
-                addBotMessage(`Starting scene: ${args}\n*The scene begins...*`);
-                if (args.toLowerCase() === 'cafe') {
-                    addBotMessage("You find yourself in a cozy cafe with soft jazz music playing. Your character sits across from you, sipping a cup of tea.");
-                } else if (args.toLowerCase() === 'school') {
-                    addBotMessage("The school bell rings as you enter the classroom. Your character looks up from their desk and notices you.");
+           function processCommand(command) {
+                const parts = command.split(' ');
+                const cmd = parts[0].toLowerCase();
+                const args = parts.slice(1).join(' ');
+                
+                switch(cmd) {
+                    case '/help':
+                        addBotMessage("Available commands:\n" +
+                            "/start_scene [name] - Start a roleplay scenario\n" +
+                            "/action [action] - Perform an action with your character\n" +
+                            "/stats - Show your character's current stats\n" +
+                            "/end - End the current scene");
+                        break;
+                        
+                    case '/start_scene':
+                        if (!args) {
+                            addBotMessage("Please specify a scene name. Try /help for examples.");
+                        } else {
+                            addBotMessage(`Starting scene: ${args}\n*The scene begins...*`);
+                            if (args.toLowerCase() === 'cafe') {
+                                addBotMessage("You find yourself in a cozy cafe with soft jazz music playing. Your character sits across from you, sipping a cup of tea.");
+                            } else if (args.toLowerCase() === 'school') {
+                                addBotMessage("The school bell rings as you enter the classroom. Your character looks up from their desk and notices you.");
+                            }
+                        }
+                        break;
+                        
+                    case '/action':
+                        if (!args) {
+                            addBotMessage("Please specify an action. Try /help for examples.");
+                        } else {
+                            const currentChar = document.getElementById('displayName').textContent || 'Your character';
+                            addBotMessage(`*${currentChar} ${args}*`);
+                            
+                            // Random reaction
+                            setTimeout(() => {
+                                const reactions = [
+                                    "Oh! That was unexpected...",
+                                    "*blushes* Why would you do that?",
+                                    "I... I don't know how to respond to that!",
+                                    "That's so sweet of you! *smiles*",
+                                    "Hah? What's gotten into you?"
+                                ];
+                                addBotMessage(reactions[Math.floor(Math.random() * reactions.length)]);
+                            }, 800);
+                        }
+                        break;
+                        
+                    case '/stats':
+                        const charName = document.getElementById('displayName').textContent || '[No character]';
+                        const charType = document.getElementById('displayType').textContent || '[No type]';
+                        addBotMessage(`Character Stats:\nName: ${charName}\nType: ${charType}\nAffection: 50/100`);
+                        break;
+                        
+                    case '/end':
+                        addBotMessage("Ending the current scene. Type /start_scene [name] to begin a new one.");
+                        break;
+                        
+                    default:
+                        addBotMessage("Unknown command. Type /help to see available commands.");
                 }
             }
-            break;
 
-        case '/action':
-            if (!args) {
-                addBotMessage("Please specify an action. Try /help for examples.");
-            } else {
-                const currentChar = document.getElementById('displayName').textContent || 'Your character';
-                addBotMessage(`*${currentChar} ${args}*`);
-                setTimeout(() => {
-                    const reactions = [
-                        "Oh! That was unexpected...",
-                        "*blushes* Why would you do that?",
-                        "I... I don't know how to respond to that!",
-                        "That's so sweet of you! *smiles*",
-                        "Hah? What's gotten into you?"
-                    ];
-                    addBotMessage(reactions[Math.floor(Math.random() * reactions.length)]);
-                }, 800);
-            }
-            break;
-
-        case '/stats':
-            const charName = document.getElementById('displayName').textContent || '[No character]';
-            const charType = document.getElementById('displayType').textContent || '[No type]';
-            addBotMessage(`Character Stats:\nName: ${charName}\nType: ${charType}\nAffection: 50/100`);
-            break;
-
-        case '/end':
-            addBotMessage("Ending the current scene. Type /start_scene [name] to begin a new one.");
-            break;
-
-        default:
-            addBotMessage("Unknown command. Type /help to see available commands.");
-    }
-}
 
 
             
