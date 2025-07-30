@@ -3,510 +3,588 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WaifuRP Bot</title>
+    <title>Roleplay Character Creator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        .chat-message {
+        body {
+            background-image: linear-gradient(to bottom right, #f5f3ff, #e9d5ff);
+            min-height: 100vh;
+        }
+        .fade-in {
             animation: fadeIn 0.3s ease-in-out;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .character-card {
-            transition: all 0.3s ease;
+        .textarea-auto {
+            min-height: 100px;
+            resize: vertical;
         }
-        .character-card:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        header h1 {
+            background: linear-gradient(to right, #7e22ce, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
         }
-        .typewriter {
-            overflow: hidden;
-            border-right: 2px solid #333;
-            white-space: nowrap;
-            margin: 0 auto;
-            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+        main {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(209, 213, 219, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
-        @keyframes typing {
-            from { width: 0 }
-            to { width: 100% }
+        select, input, textarea {
+            transition: all 0.2s;
         }
-        @keyframes blink-caret {
-            from, to { border-color: transparent }
-            50% { border-color: #333; }
+        select:focus, input:focus, textarea:focus {
+            box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.2);
+        }
+        button {
+            transition: all 0.2s;
+        }
+        button:hover {
+            transform: translateY(-1px);
         }
     </style>
 </head>
-<body class="font-sans" style="background-color: var(--tg-theme-bg-color, #f3f4f6); color: var(--tg-theme-text-color, #000);">
-    <div class="container mx-auto p-2" style="max-width: 100%;">
-        <!-- Header Section -->
-        <header class="bg-gradient-to-r from-pink-500 to-purple-600 text-white p-4 shadow-lg" style="border-radius: 0;">
-            <div class="flex items-center">
-                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/a22757c8-58ec-4647-bbcc-e9a67b47518c.png" alt="WaifuRP Bot profile picture - anime-style character with pink hair and maid outfit" class="w-16 h-16 rounded-full mr-4 border-4 border-white">
-                <div>
-                    <h1 class="text-3xl font-bold">WaifuRP Bot</h1>
-                    <p class="text-pink-200">Your interactive roleplaying companion</p>
-                </div>
-            </div>
+<body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto px-2 sm:px-4 py-4 sm:py-6 max-w-md sm:max-w-2xl">
+        <header class="mb-8 text-center">
+            <h1 class="text-2xl sm:text-3xl font-bold text-purple-700 mb-2">Roleplay Character Creator</h1>
+            <p class="text-gray-600">Design your perfect RP character with detailed traits</p>
+            <button id="loadPremadeBtn" class="mt-4 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
+                Load Premade Character
+            </button>
         </header>
 
-        <!-- Main Content -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Character Creation Panel -->
-            <div class="md:col-span-1 bg-white rounded-xl p-6 shadow-md">
-                <h2 class="text-2xl font-bold mb-4 text-purple-800">Character Creator</h2>
-                
+        <main class="bg-white rounded-xl shadow-lg p-4 sm:p-6 transition-all duration-300 hover:shadow-xl">
+            <!-- Character Form -->
+            <form id="characterForm" class="space-y-6">
+                <!-- Name Section -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Character Name</label>
+                    <input type="text" id="name" name="name" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                </div>
+
+                <!-- Profile Picture Section -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Character Image</label>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                        <div class="rounded-full bg-gray-200 w-16 h-16 flex items-center justify-center overflow-hidden"
+                            id="avatarPreview">
+                            <span class="text-gray-500">No image selected</span>
+                        </div>
+                        <div class="flex flex-col space-y-2">
+                            <select id="premadeAvatars" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                <option value="">Select premade avatar</option>
+                                <option value="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/09d83a08-1e71-458f-a077-9ce7160be355.png">Anime Girl (Standard)</option>
+                                <option value="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/27db1457-d018-4c1e-b317-f226f45266b6.png">Tsundere Anime Girl</option>
+                                <option value="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/14031aa6-bca0-473c-b493-78ba579d4872.png">Kuudere Anime Girl</option>
+                                <option value="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/05de0149-bced-4aab-8c4a-de7ddd8b3dd7.png">Yandere Anime Girl</option> 
+                                <option value="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/1957e68e-9b1e-4ee4-b610-3bc9b746ad75.png">Anime Boy</option>
+                                <option value="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/da32df76-46a9-4a0e-8a94-964fc39bc1a4.png">Fantasy Warrior</option>
+                                <option value="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/9533440b-d885-4682-bd94-27b6d80995d4.png">Sci-Fi Character</option>
+                                <option value="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/7dbbd2dc-cd83-4d20-a99a-ee9d3589dcd6.png">Modern Professional</option>
+                                <option value="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/954c7fd9-387d-43f1-b1d9-ccf2b8e0c5c2.png">Kawaii Neko Girl</option>
+                                <option value="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/500f6742-53d1-4f64-bf98-4bd1fc4d55b0.png">Gothic Lolita</option>
+                                <option value="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/03284512-8894-4ff3-8d2f-8c4ce37695f2.png">Schoolgirl Uniform</option>
+                            </select>
+                            <div class="text-center text-gray-500 text-xs">or</div>
+                            <label for="avatarInput" class="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 cursor-pointer transition-colors text-center">
+                                Upload Custom Image
+                            </label>
+                            <input type="file" id="avatarInput" name="avatar" accept=".png,.jpg,.jpeg" class="hidden">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personality Section -->
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-gray-700 mb-2">Character Name</label>
-                        <input type="text" id="charName" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-pink-500">
-                    </div>
-                    
-                   	<div>
-			  <label class="block text-gray-700 mb-2">Primary Personality</label>
-  				<select id="charPersonality1" class="w-full p-2 border rounded-md mb-2">
-   				  <option value="Tsundere">Tsundere - Starts cold, warms up over time</option>
-                            <option value="Yandere">Yandere - Lovestruck and possessive</option>
-                            <option value="Kuudere">Kuudere - Cold exterior, warm heart</option>
-                            <option value="Dandere">Dandere - Silent but deeply caring</option>
-                            <option value="Genki">Genki - Energetic and cheerful</option>
-                            <option value="Kamidere">Kamidere - Confident and god-complex</option>
-                            <option value="Himedere">Himedere - Princess-like attitude</option>
-                            <option value="Bokukko">Bokukko - Tomboy with rough speech</option>
-                            <option value="Shundere">Shundere - Bashful but affectionate</option>
-                            <option value="Oujidere">Oujidere - Noble prince type</option>
-                            <option value="Mayadere">Mayadere - Reformed villain</option>
-                            <option value="Megane">Megane - Intellectual glasses-wearer</option>
-                            <option value="Onee-san">Onee-san - Mature older sister</option>
-                            <option value="Shrinking Violet">Shrinking Violet - Extremely shy</option>
-                            <option value="Yangire">Yangire - Unpredictable mood swings</option>
-                            <option value="Nekomimi">Nekomimi - Catgirl tendencies</option>
-                            <option value="Gyaru">Gyaru - Fashionable and bold</option>
-                            <option value="Deredere">Deredere - Sweet and affectionate</option>
-                            <option value="Undere">Undere - Submissive and shy</option>
-  				</select>
-
-  			 <label class="block text-gray-700 mb-2 mt-2">Secondary Personality (Optional)</label>
- 				<select id="charPersonality2" class="w-full p-2 border rounded-md">
-   					 <option value="">None</option>
-   				  <option value="Tsundere">Tsundere - Starts cold, warms up over time</option>
-                            <option value="Yandere">Yandere - Lovestruck and possessive</option>
-                            <option value="Kuudere">Kuudere - Cold exterior, warm heart</option>
-                            <option value="Dandere">Dandere - Silent but deeply caring</option>
-                            <option value="Genki">Genki - Energetic and cheerful</option>
-                            <option value="Kamidere">Kamidere - Confident and god-complex</option>
-                            <option value="Himedere">Himedere - Princess-like attitude</option>
-                            <option value="Bokukko">Bokukko - Tomboy with rough speech</option>
-                            <option value="Shundere">Shundere - Bashful but affectionate</option>
-                            <option value="Oujidere">Oujidere - Noble prince type</option>
-                            <option value="Mayadere">Mayadere - Reformed villain</option>
-                            <option value="Megane">Megane - Intellectual glasses-wearer</option>
-                            <option value="Onee-san">Onee-san - Mature older sister</option>
-                            <option value="Shrinking Violet">Shrinking Violet - Extremely shy</option>
-                            <option value="Yangire">Yangire - Unpredictable mood swings</option>
-                            <option value="Nekomimi">Nekomimi - Catgirl tendencies</option>
-                            <option value="Gyaru">Gyaru - Fashionable and bold</option>
-                            <option value="Deredere">Deredere - Sweet and affectionate</option>
-                            <option value="Undere">Undere - Submissive and shy</option>
-  				</select>
-			</div>
-
-                    <div>
-                        <label class="block text-gray-700 mb-2">Background Story</label>
-                        <textarea id="charBackground" class="w-full p-2 border rounded-md h-24"></textarea>
+                        <label for="primaryPersonality" class="block text-sm font-medium text-gray-700 mb-1">Primary Personality</label>
+                        <select id="primaryPersonality" name="primaryPersonality" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                            <option value="">Select primary personality</option>
+                            <option value="Cheerful">Cheerful</option>
+                            <option value="Serious">Serious</option>
+                            <option value="Mysterious">Mysterious</option>
+                            <option value="Aggressive">Aggressive</option>
+                            <option value="Timid">Timid</option>
+                            <option value="Energetic">Energetic</option>
+                            <option value="Calm">Calm</option>
+                            <option value="Intelligent">Intelligent</option>
+                            <option value="Naive">Naive</option>
+                            <option value="Charismatic">Charismatic</option>
+                            <option value="Shy">Shy</option>
+                            <option value="Confident">Confident</option>
+                            <option value="Loyal">Loyal</option>
+                            <option value="Rebellious">Rebellious</option>
+                            <option value="Romantic">Romantic</option>
+                            <option value="Sarcastic">Sarcastic</option>
+                            <option value="Playful">Playful</option>
+                            <option value="Dreamy">Dreamy</option>
+                            <option value="Bookworm">Bookworm</option>
+                            <option value="Athletic">Athletic</option>
+                            <option value="Scientific">Scientific</option>
+                            <option value="Ruthless">Ruthless</option>
+                            <option value="Friendly">Friendly</option>
+                            <option value="Gentle">Gentle</option>
+                            <option value="Brilliant">Brilliant</option>
+                        </select>
                     </div>
 
                     <div>
-                        <label class="block text-gray-700 mb-2">Custom Scenario</label>
-                        <textarea id="customScenario" class="w-full p-2 border rounded-md h-20" placeholder="e.g. Alone in a                                                                                                                                                                                                                                                                                                                                                                                                                                                                 dark forest..."></textarea>
+                        <label for="secondaryPersonality" class="block text-sm font-medium text-gray-700 mb-1">Secondary Personality</label>
+                        <select id="secondaryPersonality" name="secondaryPersonality"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                            <option value="">Select secondary personality</option>
+                            <option value="Optimistic">Optimistic</option>
+                            <option value="Pessimistic">Pessimistic</option>
+                            <option value="Logical">Logical</option>
+                            <option value="Emotional">Emotional</option>
+                            <option value="Analytical">Analytical</option>
+                            <option value="Creative">Creative</option>
+                            <option value="Adventurous">Adventurous</option>
+                            <option value="Cautious">Cautious</option>
+                            <option value="Playful">Playful</option>
+                            <option value="Reserved">Reserved</option>
+                            <option value="Honest">Honest</option>
+                            <option value="Deceptive">Deceptive</option>
+                            <option value="Compassionate">Compassionate</option>
+                            <option value="Cold">Cold</option>
+                            <option value="Ambitious">Ambitious</option>
+                            <option value="Content">Content</option>
+                        </select>
                     </div>
 
-                    
-                    <button id="createCharBtn" class="w-full bg-[var(--tg-theme-button-color,#ea580c)] text-[var(--tg-theme-button-text-color,#fff)] py-3 rounded-lg">
-                        Create Character
+                    <div class="pt-4">
+                        <button type="button" id="addPersonalityBtn" 
+                            class="flex items-center justify-center w-full px-4 py-2 bg-gray-100 border border-dashed border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600 transition-transform group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Additional Personality Trait
+                        </button>
+                        <div id="additionalPersonalities" class="mt-2 space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Background Section -->
+                <div>
+                    <label for="background" class="block text-sm font-medium text-gray-700 mb-1">Character Background</label>
+                    <textarea id="background" name="background" rows="4" required
+                        class="w-full px-4 py-2 textarea-auto border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="Write your character's backstory, history, and key life events that shaped them"></textarea>
+                </div>
+
+                <!-- Scenario Section -->
+                <div class="space-y-4">
+                    <div>
+                        <label for="scenario" class="block text-sm font-medium text-gray-700 mb-1">Scenario</label>
+                        <select id="scenarioSelect" name="scenario" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                            <option value="">Choose a pre-made scenario (or create your own)</option>
+                            <option value="AcademyLife">Academy Life</option>
+                            <option value="FantasyWorld">Fantasy World Adventure</option>
+                            <option value="CyberpunkCity">Cyberpunk City</option>
+                            <option value="RoyalCourt">Royal Court Intrigue</option>
+                            <option value="SpaceExploration">Space Exploration</option>
+                            <option value="PostApocalyptic">Post-Apocalyptic Survival</option>
+                            <option value="DetectiveStory">Detective Story</option>
+                            <option value="MagicalSchool">Magical School</option>
+                            <option value="MilitaryDrama">Military Drama</option>
+                            <option value="RomanticComedy">Romantic Comedy</option>
+                        </select>
+                    </div>
+
+                    <div id="customScenarioContainer" class="hidden">
+                        <label for="customScenario" class="block text-sm font-medium text-gray-700 mb-1">Custom Scenario</label>
+                        <textarea id="customScenario" name="customScenario" rows="4"
+                            class="w-full px-4 py-2 textarea-auto border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                            placeholder="Describe the scenario where this character will exist"></textarea>
+                    </div>
+
+                    <button type="button" id="toggleCustomScenario" 
+                        class="flex items-center justify-center w-full px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Create Custom Scenario
                     </button>
                 </div>
-                
-                <hr class="my-6">
-                
-                <div id="characterDisplay" class="hidden">
-                    <h3 class="font-bold text-lg mb-3 text-center text-purple-800">Your Character</h3>
-                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-purple-300 shadow-sm">
-                        <div class="flex items-center mb-3">
-                            <div class="w-16 h-16 rounded-full bg-purple-200 flex items-center justify-center mr-3">
-                                <span class="text-2xl">👤</span>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-purple-700">Name</p>
-                                <p id="displayName" class="text-xl font-bold text-purple-900"></p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <p class="text-sm font-medium text-purple-700">Personality</p>
-                                <p id="displayType" class="px-3 py-1 bg-purple-100 rounded-full text-sm font-medium"></p>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-purple-700">Affection</p>
-                                <div class="h-2 bg-purple-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-pink-500" style="width: 50%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <p class="text-sm font-medium text-purple-700 mb-1">Background</p>
-                            <p id="displayBg" class="text-sm text-gray-700 bg-white p-2 rounded"></p>
-                        </div>
-                    </div>
+
+                <!-- Buttons -->
+                <div class="pt-4 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                    <button type="button" id="previewBtn" 
+                        class="flex-1 px-6 py-3 bg-purple-100 text-purple-700 font-medium rounded-lg hover:bg-purple-200 transition-colors">
+                        Preview Character
+                    </button>
+                    <button type="submit" 
+                        class="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg">
+                        Save Character
+                    </button>
                 </div>
-            </div>
-            
-            <!-- Chat Interface -->
-            <div class="md:col-span-2 bg-white rounded-xl shadow-md flex flex-col">
-                <div class="p-4 border-b bg-gray-50 rounded-t-xl">
-                    <h2 class="text-2xl font-bold text-purple-800">Roleplay Session</h2>
-                    <p class="text-gray-600">Currently chatting as <span id="currentChar" class="font-semibold">[No character selected]</span></p>
-                </div>
-                
-                <!-- Chat Messages -->
-                <div id="chatContainer" class="flex-1 p-4 overflow-y-auto max-h-96 space-y-4">
-                    <div class="text-center text-gray-500 py-8">
-                        <p class="typewriter">Welcome to WaifuRP Bot! Create a character to begin your adventure.</p>
-                    </div>
-                </div>
-                
-                <!-- Input Area -->
-                <div class="p-4 border-t bg-gray-50 rounded-b-xl">
-                    <div class="flex">
-                        <input type="text" id="messageInput" placeholder="Type your message..." class="flex-1 p-2 border rounded-l-md focus:ring-2 focus:ring-pink-500">
-                        <button id="sendMessageBtn" class="bg-pink-600 text-white px-4 py-2 rounded-r-md hover:bg-pink-700 transition">
-                            Send
+            </form>
+        </main>
+
+        <!-- Preview Modal -->
+        <div id="previewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-white rounded-xl shadow-xl max-w-[95vw] sm:max-w-md w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-purple-700">Character Preview</h2>
+                        <button id="closePreviewBtn" class="text-gray-500 hover:text-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                         </button>
                     </div>
-                    <div class="mt-2 text-sm text-gray-600">
-                        <p>Try commands: <span class="font-mono">/start_scene cafe</span>, <span class="font-mono">/action hug</span>, <span class="font-mono">/help</span></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Scenario Gallery -->
-        <div class="mt-8 bg-white rounded-xl p-6 shadow-md">
-            <h2 class="text-2xl font-bold mb-4 text-purple-800">Scenario Templates</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Scenario Cards -->
-                <div class="character-card bg-gradient-to-br from-pink-50 to-purple-50 rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:border-pink-300">
-                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/8a5a5606-b49e-4da2-b256-a547a19d50bb.png" alt="Romantic cafe scene with cherry blossoms in the background, anime style" class="w-full h-40 object-cover">
-                    <div class="p-4">
-                        <h3 class="font-bold text-lg mb-1">Cafe Encounter</h3>
-                        <p class="text-sm text-gray-600 mb-2">Meet your character in a cozy cafe with cherry blossoms outside.</p>
-                        <button class="text-sm bg-pink-600 text-white px-3 py-1 rounded hover:bg-pink-700 transition">
-                            Start Scene
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="character-card bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:border-blue-300">
-                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/9e9cf377-6ff5-4718-9270-3268d193cda3.png" alt="Fantasy medieval castle courtyard during sunset, anime style" class="w-full h-40 object-cover">
-                    <div class="p-4">
-                        <h3 class="font-bold text-lg mb-1">Royal Meeting</h3>
-                        <p class="text-sm text-gray-600 mb-2">A formal introduction to the royal family in their grand castle.</p>
-                        <button class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">
-                            Start Scene
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="character-card bg-gradient-to-br from-green-50 to-teal-50 rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:border-green-300">
-                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/70b4f37a-786b-4d42-92cf-9bf3252f2eda.png" alt="High school classroom with sunshine streaming through windows, anime style" class="w-full h-40 object-cover">
-                    <div class="p-4">
-                        <h3 class="font-bold text-lg mb-1">School Life</h3>
-                        <p class="text-sm text-gray-600 mb-2">Experience daily life with your character in a Japanese high school.</p>
-                        <button class="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">
-                            Start Scene
-                        </button>
+                    
+                    <div id="previewContent" class="space-y-4">
+                        <!-- Preview content will be inserted here -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        const tg = window.Telegram.WebApp;
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Telegram Mini App
-            tg.expand();
-            tg.BackButton.hide();
+            const Telegram = window.Telegram?.WebApp;
             
-            // Set theme colors
-            document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#f3f4f6');
-            document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000');
-            document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#ea580c');
-            document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#fff');
-            // Character creation
-            const createCharBtn = document.getElementById('createCharBtn');
-            const characterDisplay = document.getElementById('characterDisplay');
-            const currentCharSpan = document.getElementById('currentChar');
-            
-            createCharBtn.addEventListener('click', function() {
-                const name = document.getElementById('charName').value;
-                const personality = document.getElementById('charPersonality').value;
-                const background = document.getElementById('charBackground').value;
+            // Premade character template
+            const premadeCharacters = {
+                "Mystic Elara": {
+                    name: "Mystic Elara",
+                    avatar: "https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/f655f35d-1542-4efd-8c00-86c9c998ce58.png",
+                    primaryPersonality: "Mysterious",
+                    secondaryPersonality: "Compassionate",
+                    extraPersonalities: ["Intelligent", "Reserved"],
+                    background: "A powerful sorceress from the Northern Wastes who hides a tragic past behind her enigmatic demeanor. Despite her cold exterior, she cares deeply for those she protects.",
+                    scenario: "Fantasy World Adventure"
+                }
+            };
 
-		const scenario = document.getElementById('customScenario').value;
+            if (Telegram) {
+                Telegram.expand();
+                Telegram.setHeaderColor('#8B5CF6'); // Purple color
+                Telegram.MainButton.setText('OPEN CHARACTER CREATOR').show();
+            }
 
-			// Save with other character data
-		tg.CloudStorage.setItem('current_character', JSON.stringify({
-  			  name: name,
-  			  personality: personality,
-   			  background: background,
-  			  scenario: scenario  // 👈 Include the custom scenario
-				}));
-
-			// Display or handle it as needed
-				if (scenario) {
-   				 addBotMessage(`🌌 Scenario set: "${scenario}"`);
-			}
-		
-
-		
+            // Handle avatar selection
+            document.getElementById('premadeAvatars').addEventListener('change', function(e) {
+                const preview = document.getElementById('avatarPreview');
+                preview.innerHTML = '';
                 
-                if (!name) {
-                    alert('Please enter a character name');
+                if (e.target.value) {
+                    const img = document.createElement('img');
+                    img.src = e.target.value;
+                    img.className = 'w-full h-full object-cover';
+                    preview.appendChild(img);
+                    document.getElementById('avatarInput').value = ''; // Clear file input
+                } else {
+                    // Show default "no image" state
+                    const span = document.createElement('span');
+                    span.className = 'text-gray-500';
+                    span.textContent = 'No image';
+                    preview.appendChild(span);
+                }
+            });
+
+            // Handle profile picture upload
+            document.getElementById('avatarInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Validate file type
+                    const validTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+                    if (!validTypes.includes(file.type)) {
+                        alert('Please upload a valid image file (.png, .jpg or .jpeg)');
+                        document.getElementById('avatarInput').value = '';
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const preview = document.getElementById('avatarPreview');
+                        preview.innerHTML = '';
+                        const img = document.createElement('img');
+                        img.src = event.target.result;
+                        img.className = 'w-full h-full object-cover';
+                        preview.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Additional personalities with anime archetypes
+            const additionalPersonalities = [
+                {name: "Tsundere", desc: "Cold/rude outside but warm/caring inside"},
+                {name: "Yandere", desc: "Sweet and loving but becomes psychotic when jealous"},
+                {name: "Kuudere", desc: "Cool and calm exterior hides soft emotions"},
+                {name: "Dandere", desc: "Extremely shy but opens up to close friends"},
+                {name: "Genki", desc: "Hyperactive, upbeat and optimistic"},
+                {name: "Kamidere", desc: "Confident to the point of arrogance"},
+                {name: "Himedere", desc: "Acts like a princess expecting special treatment"},
+                {name: "Bokukko", desc: "Tomboyish girl who uses masculine speech"},
+                {name: "Shundere", desc: "Shy at first but becomes more confident"},
+                {name: "Oujidere", desc: "Prince-like male version of Himedere"},
+                {name: "Mayadere", desc: "Starts as antagonist but develops affection"},
+                {name: "Megane", desc: "Character defined by wearing glasses"},
+                {name: "Onee-san", desc: "Older sister/motherly figure"},
+                {name: "Shrinking Violet", desc: "Extremely timid and bashful"},
+                {name: "Yangire", desc: "Seemingly sweet but snaps violently"},
+                {name: "Nekoimi", desc: "Cat-like playful personality"},
+                {name: "Gyaru", desc: "Trendy, fashionable girl"},
+                {name: "Deredere", desc: "Constantly cheerful and loving"},
+                {name: "Undere", desc: "Quietly supportive in the background"},
+                // Keep original options
+                "Ambitious", "Apathetic", "Bold", "Caring", "Cautious", "Charming", "Childish",
+                "Competitive", "Cowardly", "Cruel", "Cunning", "Curious", "Determined", "Dutiful",
+                "Easygoing", "Eccentric", "Flirtatious", "Gentle", "Greedy", "Gullible", "Haughty",
+                "Honest", "Humble", "Impulsive", "Insecure", "Lazy", "Mature", "Melancholic",
+                "Narcissistic", "Naughty", "Nervous", "Obedient", "Optimistic", "Organized",
+                "Paranoid", "Patient", "Pessimistic", "Protective", "Proud", "Quiet", "Reckless",
+                "Reliable", "Resourceful", "Selfish", "Selfless", "Sensitive", "Stubborn",
+                "Studious", "Suspicious", "Teasing", "Trusting", "Whimsical", "Wise", "Witty"
+            ];
+
+            // Add personality trait
+            document.getElementById('addPersonalityBtn').addEventListener('click', function() {
+                const container = document.getElementById('additionalPersonalities');
+                const div = document.createElement('div');
+                div.classList.add('flex', 'items-center', 'space-x-2', 'fade-in', 'w-full');
+                
+                const select = document.createElement('select');
+                select.className = 'w-full sm:flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500';
+                select.name = 'extraPersonality[]';
+                
+                // Add default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Select additional personality';
+                select.appendChild(defaultOption);
+                
+                // Add personality options
+                additionalPersonalities.forEach(personality => {
+                    const option = document.createElement('option');
+                    if (typeof personality === 'object') {
+                        option.value = personality.name;
+                        option.textContent = `${personality.name} (${personality.desc})`;
+                        option.style.whiteSpace = 'normal';
+                        option.title = personality.desc; // Add tooltip
+                    } else {
+                        option.value = personality;
+                        option.textContent = personality;
+                    }
+                    select.appendChild(option);
+                });
+                
+                // Add remove button
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'ml-2 p-1 sm:p-2 text-red-500 hover:text-red-700';
+                button.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                `;
+                button.addEventListener('click', function() {
+                    div.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                    setTimeout(() => div.remove(), 300);
+                });
+                
+                div.appendChild(select);
+                div.appendChild(button);
+                container.appendChild(div);
+            });
+
+            // Toggle custom scenario
+            document.getElementById('toggleCustomScenario').addEventListener('click', function() {
+                const container = document.getElementById('customScenarioContainer');
+                const select = document.getElementById('scenarioSelect');
+                
+                if (container.classList.contains('hidden')) {
+                    container.classList.remove('hidden');
+                    select.value = '';
+                    this.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                        </svg>
+                        Use Pre-made Scenario
+                    `;
+                } else {
+                    container.classList.add('hidden');
+                    this.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Create Custom Scenario
+                    `;
+                }
+            });
+
+            // Character preview
+            document.getElementById('previewBtn').addEventListener('click', function() {
+                const name = document.getElementById('name').value || 'Unnamed Character';
+                const primaryPersonality = document.getElementById('primaryPersonality').value || 'Not specified';
+                const secondaryPersonality = document.getElementById('secondaryPersonality').value || 'None';
+                const background = document.getElementById('background').value || 'No background provided.';
+                
+                // Get additional personalities
+                const extraPersonalities = Array.from(document.querySelectorAll('select[name="extraPersonality[]"]'))
+                    .map(select => select.value)
+                    .filter(value => value);
+                
+                // Get scenario
+                let scenario;
+                if (!document.getElementById('customScenarioContainer').classList.contains('hidden') && document.getElementById('customScenario').value) {
+                    scenario = document.getElementById('customScenario').value;
+                } else {
+                    scenario = document.getElementById('scenarioSelect').value || 'No scenario selected.';
+                }
+                
+                // Build preview content
+                let previewHTML = `
+                    <div class="mb-6 flex items-start space-x-4">
+                        ${document.getElementById('avatarPreview').querySelector('img') 
+                            ? `<div class="flex-shrink-0">
+                                <img src="${document.getElementById('avatarPreview').querySelector('img').src}" 
+                                     class="w-16 h-16 rounded-full object-cover border-2 border-purple-200">
+                               </div>`
+                            : ''}
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">${name}</h3>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">${primaryPersonality}</span>
+                            ${secondaryPersonality ? `<span class="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">${secondaryPersonality}</span>` : ''}
+                            ${extraPersonalities.map(p => `<span class="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">${p}</span>`).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 mb-1">Background:</h4>
+                        <p class="text-gray-600 whitespace-pre-line">${background}</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-gray-700 mb-1">Scenario:</h4>
+                        <p class="text-gray-600 whitespace-pre-line">${scenario}</p>
+                    </div>
+                `;
+                
+                document.getElementById('previewContent').innerHTML = previewHTML;
+                document.getElementById('previewModal').classList.remove('hidden');
+            });
+
+            // Load premade character
+            document.getElementById('loadPremadeBtn').addEventListener('click', function() {
+                const character = premadeCharacters["Mystic Elara"];
+                document.getElementById('name').value = character.name;
+                document.getElementById('primaryPersonality').value = character.primaryPersonality;
+                document.getElementById('secondaryPersonality').value = character.secondaryPersonality;
+                document.getElementById('background').value = character.background;
+                document.getElementById('scenarioSelect').value = character.scenario;
+                
+                // Update avatar preview
+                const preview = document.getElementById('avatarPreview');
+                preview.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = character.avatar;
+                img.className = 'w-full h-full object-cover';
+                preview.appendChild(img);
+                
+                // Clear any additional personalities first
+                document.getElementById('additionalPersonalities').innerHTML = '';
+                
+                // Add extra personalities
+                character.extraPersonalities.forEach(p => {
+                    const container = document.getElementById('additionalPersonalities');
+                    const div = document.createElement('div');
+                    div.classList.add('flex', 'items-center', 'fade-in');
+                    
+                    const select = document.createElement('select');
+                    select.className = 'flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500';
+                    select.name = 'extraPersonality[]';
+                    select.value = p;
+                    
+                    const option = document.createElement('option');
+                    option.value = p;
+                    option.textContent = p;
+                    option.selected = true;
+                    select.appendChild(option);
+                    
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'ml-2 p-2 text-red-500 hover:text-red-700';
+                    button.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    `;
+                    button.addEventListener('click', function() {
+                        div.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                        setTimeout(() => div.remove(), 300);
+                    });
+                    
+                    div.appendChild(select);
+                    div.appendChild(button);
+                    container.appendChild(div);
+                });
+                
+                alert('Premade character "Mystic Elara" loaded! Edit as needed before saving.');
+            });
+
+            // Close preview
+            document.getElementById('closePreviewBtn').addEventListener('click', function() {
+                document.getElementById('previewModal').classList.add('hidden');
+            });
+
+            // Form submission
+            document.getElementById('characterForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    name: document.getElementById('name').value,
+                    avatar: document.getElementById('avatarPreview').querySelector('img')?.src || null,
+                    primaryPersonality: document.getElementById('primaryPersonality').value,
+                    secondaryPersonality: document.getElementById('secondaryPersonality').value,
+                    background: document.getElementById('background').value,
+                    extraPersonalities: Array.from(document.querySelectorAll('select[name="extraPersonality[]"]'))
+                        .map(select => select.value)
+                        .filter(value => value),
+                    scenario: document.getElementById('customScenarioContainer').classList.contains('hidden') 
+                        ? document.getElementById('scenarioSelect').value
+                        : document.getElementById('customScenario').value
+                };
+                
+                if (!formData.name) {
+                    alert('Please enter a character name.');
                     return;
                 }
                 
-                // Save character using Telegram WebApp storage
-                tg.CloudStorage.setItem('current_character', JSON.stringify({
-                    name: name,
-                    personality: personality,
-                    background: background
-                }));
-                
-                // Also save to bot's backend via sendData
-                tg.sendData(JSON.stringify({
-                    action: 'create_character',
-                    character: {
-                        name: name,
-                        type: personality,
-                        background: background
-                    }
-                }));
-                
-                // Display created character
-                document.getElementById('displayName').textContent = name;
-                document.getElementById('displayType').textContent = personality;
-                document.getElementById('displayBg').textContent = background;
-                
-                characterDisplay.classList.remove('hidden');
-                currentCharSpan.textContent = name;
-                
-                // Add welcome message to chat
-                const welcomeMessages = {
-  "Tsundere": `Hmph. So you're {name}, huh? Don't expect me to be nice to you! *blushes* (I'm actually happy to meet you...)`,
-  "Yandere": `*giggles* {name}... what a lovely name~ I promise I'll love you forever and ever... no matter what.`,
-  "Kuudere": `Ah, {name}. I acknowledge your presence. Don't expect me to be overly emotional.`,
-
-  "Dandere": `*nods silently* {name}, huh...? N-Nice to meet you... I guess.`,
-  "Genki": `Heeeyyy {name}!! Ready to go on an adventure?! Let’s goooo~!! ✨`,
-  "Kamidere": `Ah, {name}, you've chosen wisely. You may now bask in my divine presence.`,
-  "Himedere": `Welcome, peasant—er, I mean, {name}. You are now in the presence of royalty!`,
-  "Bokukko": `Yo, {name}! Don’t expect me to act all girly or anything, got it?`,
-  "Shundere": `{name}...? A-Are you really here for me...? *wipes eyes* Thank you...`,
-  "Oujidere": `Ah, {name}. The pleasure is all yours, of course.`,
-  "Mayadere": `Heh... {name}, right? Don’t worry... I’m not as dangerous as I used to be. Probably.`,
-  "Megane": `Greetings, {name}. I look forward to our logical yet stimulating conversations.`,
-  "Onee-san": `Oh my, {name}~ You're just as adorable as I imagined! Let big sis take care of you.`,
-  "Shrinking": `U-Um... h-hi {name}... I hope we can be f-friends... *hides face*`,
-  "Yangire": `Hey {name}~ Let’s be super best friends forever! You’ll never leave me… right?`,
-  "Nekomimi": `Nyaa~! {name}, you’re finally here! *tail flicks happily* Wanna cuddle?`,
-  "Gyaru": `Like, omg {name}, you’re soooo cute~ Let’s totally slay this RP together~ 💅✨`,
-  "Deredere": `{name}~! You’re here! Yay! I’ve been waiting forever to play with you! 💖`,
-  "Undere": `Y-Yes! I’ll be whatever you want, {name}… j-just please don’t leave me...`,
-  "default": `✨ Welcome, {name}! ✨\nI'm excited to roleplay with you.`
-};
-
-            // Chat functionality
-            const chatContainer = document.getElementById('chatContainer');
-            const messageInput = document.getElementById('messageInput');
-            const sendMessageBtn = document.getElementById('sendMessageBtn');
-            
-            function addMessage(sender, message, isUser = false) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `chat-message flex ${isUser ? 'justify-end' : 'justify-start'}`;
-                
-                const bubble = document.createElement('div');
-                bubble.className = `max-w-xs md:max-w-md rounded-lg p-3 ${isUser ? 'bg-pink-600 text-white rounded-tr-none' : 'bg-gray-200 rounded-tl-none'}`;
-                
-                if (!isUser && sender) {
-                    const senderSpan = document.createElement('span');
-                    senderSpan.className = 'font-bold text-purple-800 text-sm';
-                    senderSpan.textContent = sender + ': ';
-                    bubble.prepend(senderSpan);
+                if (!formData.primaryPersonality) {
+                    alert('Please select a primary personality.');
+                    return;
                 }
                 
-                bubble.append(document.createTextNode(message));
-                messageDiv.appendChild(bubble);
-                chatContainer.appendChild(messageDiv);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
-            
-            function addBotMessage(message) {
-                addMessage('WaifuRP Bot', message, false);
-            }
-            
-            sendMessageBtn.addEventListener('click', sendMessage);
-            messageInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendMessage();
+                if (!formData.background) {
+                    alert('Please provide a character background.');
+                    return;
                 }
-            });
-            
-            function sendMessage() {
-                const message = messageInput.value.trim();
-                if (!message) return;
                 
-                // Add user message to chat
-                addMessage(null, message, true);
+                console.log('Character data:', formData);
                 
-                // Process commands
-                if (message.startsWith('/')) {
-                    processCommand(message);
+                // Send data to Telegram bot if in Telegram context
+                if (Telegram) {
+                    Telegram.sendData(JSON.stringify(formData));
+                    Telegram.close();
                 } else {
-                    // Simulate bot response (in a real bot, this would call an API)
-                    setTimeout(() => {
-                        const personalityTraits = {
-  "Tsundere": [
-    "Hah?! W-what are you saying!",
-    "*turns away* It's not like I care...",
-    "Baka!",
-    "Hmph. As if I'd care about that.",
-    "*face turns red* W-What nonsense are you saying?!"
-  ],
-  "Yandere": [
-    "*smiles brightly* You're so sweet~",
-    "*giggles* I'll never let you go... ever.",
-    "You're mine... all mine... *giggles*"
-  ],
-  "Kuudere": [
-    "Noted.",
-    "Understood.",
-    "*nods* Interesting perspective.",
-    "I'll consider that.",
-    "Your input has been registered."
-  ],
-  "Dandere": [
-    "...",
-    "*shy nod*",
-    "*whispers* I... I think...",
-    "*blushes*"
-  ],
-  "Genki": [
-    "Yay! So fun!",
-    "Woohoo! That's awesome!",
-    "*jumps* Let's keep going!"
-  ],
-  "Kamidere": [
-    "You dare speak to me like that?",
-    "How amusing.",
-    "I grace you with my attention."
-  ],
-  "Himedere": [
-    "Bow before your princess!",
-    "Hmph! I'm far too elegant for that.",
-    "*snaps fingers* Come, attend to me!"
-  ],
-  "Bokukko": [
-    "Yo! What’s up?",
-    "Let’s do this thing!",
-    "Heh, don’t expect me to wear a dress or anything."
-  ],
-  "Shundere": [
-    "*looks away* Umm... s-sorry...",
-    "*sobs quietly* I didn’t mean to...",
-    "*whispers* Please don’t leave me alone again..."
-  ],
-  "Oujidere": [
-    "You may address me as Lord.",
-    "A true gentleman never falters.",
-    "Grace and power come naturally to me."
-  ],
-  "Mayadere": [
-    "*chuckles darkly* I’ve changed... probably.",
-    "You sure you trust me? I wouldn’t.",
-    "Careful... I might slip back into old habits."
-  ],
-  "Megane": [
-    "*adjusts glasses* According to my calculations...",
-    "Hm, that's quite logical.",
-    "Have you considered the historical context of that?"
-  ],
-  "Onee-san": [
-    "Aw, you’re so adorable~",
-    "Come here, I’ll take care of you.",
-    "Don’t worry, I’m here for you always."
-  ],
-  "Shrinking Violet": [
-    "*hides behind curtain* U-Um… h-hi...",
-    "*clutches notebook tightly* I… I wrote this for you...",
-    "*blushes furiously* P-please don’t stare…"
-  ],
-  "Yangire": [
-    "*smiles sweetly, then frowns* What did you just say?",
-    "Everything's fine! Totally fine! Haha~",
-    "You're not going to leave me, right? ...RIGHT?!"
-  ],
-  "Nekomimi": [
-    "*purrs softly* Nyaa~",
-    "*tail flicks* I’m not mad… just... miffed!",
-    "*curls up in your lap* Warm… comfy…"
-  ],
-  "Gyaru": [
-    "OMG! That’s, like, sooo cute!",
-    "*giggles* You’re totally my type~",
-    "Let’s take selfies later, kay?"
-  ],
-  "Deredere": [
-    "Yay! You're here! I'm so happy!",
-    "*hugs tightly* Let’s do something fun!",
-    "I made lunch for us! Wanna try it?"
-  ],
-  "Undere": [
-    "Y-yes... if that’s what you want...",
-    "*nods nervously* I’ll do my best...",
-    "Anything for you... please don’t be mad..."
-  ],
-  "default": [
-    "I see...",
-    "Interesting.",
-    "Tell me more.",
-    "*nods*"
-  ]
-};
-
-                
-       messageInput.value = '';{ } 
-			    function processCommand(command) 
-			    { const parts = command.split(' '); 
-			     const cmd = parts[0].toLowerCase(); 
-			     const args = parts.slice(1).join(' '); 
-			     switch(cmd) { case '/help': addBotMessage("Available commands:\n" + "/start_scene [name] - Start a roleplay scenario\n" + "/action [action] - Perform an action with your character\n" + "/stats - Show your character's current stats\n" + "/end - End the current scene"); break; 
-				     case '/start_scene': if (!args) 
-				     { addBotMessage("Please specify a scene name. Try /help for examples."); } 
-				     else { addBotMessage(`Starting scene: ${args}\n*The scene begins...*`); 
-					   if (args.toLowerCase() === 'cafe') 
-					   { addBotMessage("You find yourself in a cozy cafe with soft jazz music playing. Your character sits across from you, sipping a cup of tea."); } 
-					   else if (args.toLowerCase() === 'school') { addBotMessage("The school bell rings as you enter the classroom. Your character looks up from their desk and notices you."); } } break; 
-				     case '/action': if (!args) { addBotMessage("Please specify an action. Try /help for examples."); } 
-				     else { const currentChar = document.getElementById('displayName').textContent || 'Your character'; addBotMessage(`*${currentChar} ${args}*`); // Random reaction setTimeout(() =&gt; { const reactions = [ "Oh! That was unexpected...", "*blushes* Why would you do that?", "I... I don't know how to respond to that!", "That's so sweet of you! *smiles*", "Hah? What's gotten into you?" ]; addBotMessage(reactions[Math.floor(Math.random() * reactions.length)]); }, 800); } break; case '/stats': const charName = document.getElementById('displayName').textContent || '[No character]'; const charType = document.getElementById('displayType').textContent || '[No type]'; addBotMessage(`Character Stats:\nName: ${charName}\nType: ${charType}\nAffection: 50/100`); break; case '/end': addBotMessage("Ending the current scene. Type /start_scene [name] to begin a new one."); break; default: addBotMessage("Unknown command. Type /help to see available commands."); } }
-            // Scenario buttons
-            document.querySelectorAll('.character-card button').forEach(button => {
-                button.addEventListener('click', function() {
-                    const scenarioName = this.closest('.character-card').querySelector('h3').textContent;
-                    messageInput.value = `/start_scene ${scenarioName.split(' ')[0].toLowerCase()}`;
-                    sendMessage();
-                });
+                    alert('Character saved! (In Telegram, this would send to the bot)');
+                    // For demo purposes, show the data
+                    console.log('Character data:', formData);
+                }
             });
         });
     </script>
