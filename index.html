@@ -50,12 +50,17 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
     <div class="container mx-auto px-2 sm:px-4 py-4 sm:py-6 max-w-md sm:max-w-2xl">
-        <header class="mb-8 text-center">
+        <header class="mb-6 text-center">
             <h1 class="text-2xl sm:text-3xl font-bold text-purple-700 mb-2">Roleplay Character Creator</h1>
             <p class="text-gray-600">Design your perfect RP character with detailed traits</p>
-            <button id="loadPremadeBtn" class="mt-4 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
-                Load Premade Character
-            </button>
+            <div class="mt-4 space-y-2">
+                <select id="characterList" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    <option value="">Select a saved character</option>
+                </select>
+                <button id="loadPremadeBtn" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
+                    Load Premade Character
+                </button>
+            </div>
         </header>
 
         <main class="bg-white rounded-xl shadow-lg p-4 sm:p-6 transition-all duration-300 hover:shadow-xl">
@@ -254,6 +259,54 @@
         document.addEventListener('DOMContentLoaded', function() {
             const Telegram = window.Telegram?.WebApp;
             
+            // Storage for characters
+            let savedCharacters = {};
+            
+            // Load any saved characters from localStorage
+            function loadSavedCharacters() {
+                const saved = localStorage.getItem('rp-characters');
+                if (saved) {
+                    savedCharacters = JSON.parse(saved);
+                    updateCharacterDropdown();
+                }
+            }
+            
+            // Save characters to localStorage
+            function saveCharactersToStorage() {
+                localStorage.setItem('rp-characters', JSON.stringify(savedCharacters));
+                updateCharacterDropdown();
+            }
+            
+            // Update the character dropdown list
+            function updateCharacterDropdown() {
+                const select = document.getElementById('characterList');
+                // Store current selection
+                const currentValue = select.value;
+                // Clear options except first
+                select.innerHTML = '<option value="">Select a saved character</option>';
+                
+                // Add premade characters
+                Object.keys(premadeCharacters).forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = `(Premade) ${name}`;
+                    select.appendChild(option);
+                });
+                
+                // Add saved characters
+                Object.keys(savedCharacters).forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    select.appendChild(option);
+                });
+                
+                // Restore selection if possible
+                if (currentValue && (currentValue in premadeCharacters || currentValue in savedCharacters)) {
+                    select.value = currentValue;
+                }
+            }
+            
             // Premade character template
             const premadeCharacters = {
                 "Mystic Elara": {
@@ -263,6 +316,24 @@
                     secondaryPersonality: "Compassionate",
                     extraPersonalities: ["Intelligent", "Reserved"],
                     background: "A powerful sorceress from the Northern Wastes who hides a tragic past behind her enigmatic demeanor. Despite her cold exterior, she cares deeply for those she protects.",
+                    scenario: "Fantasy World Adventure"
+                },
+                "Cyberpunk Detective": {
+                    name: "Cyberpunk Detective",
+                    avatar: "https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/9533440b-d885-4682-bd94-27b6d80995d4.png",
+                    primaryPersonality: "Analytical",
+                    secondaryPersonality: "Pessimistic",
+                    extraPersonalities: ["Logical", "Determined"],
+                    background: "A hardened investigator in the neon-lit streets of Neo-Tokyo, specializing in cases involving rogue AI and cybernetic modifications.",
+                    scenario: "Cyberpunk City"
+                },
+                "Fantasy Knight": {
+                    name: "Fantasy Knight",
+                    avatar: "https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/da32df76-46a9-4a0e-8a94-964fc39bc1a4.png",
+                    primaryPersonality: "Loyal",
+                    secondaryPersonality: "Honest",
+                    extraPersonalities: ["Brave", "Dutiful"],
+                    background: "A sworn knight of the kingdom, upholding justice and protecting the weak with unwavering dedication to the royal oath.",
                     scenario: "Fantasy World Adventure"
                 }
             };
@@ -575,6 +646,10 @@
                 }
                 
                 console.log('Character data:', formData);
+                
+                // Save character locally
+                savedCharacters[formData.name] = formData;
+                saveCharactersToStorage();
                 
                 // Send data to Telegram bot if in Telegram context
                 if (Telegram) {
